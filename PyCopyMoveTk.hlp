@@ -1,0 +1,48 @@
+#TODO
+# Notepad++ won't work (spaces in path?)
+# Rename function should rename file only, not path
+# Check source and destinations for permissions and ownership
+
+A python app for Linux and Windows to make copying and moving file easier.
+
+Startup options:
+source file name
+-d, --debug   Enable debugging.
+-p, --project Load a custom project file.
+-h, --help    show this help message and exit.
+
+The priorities for source file entry are as follows from lowest to highest:
+  1.  Program defaults - Built into the program (currently blank).
+  2.  Project Load     - What ever was saved with the loaded project.
+  3.  ClipBoard        - Contents of the clipboard if it is a valid file path.
+  4.  ParseCommandLine - Command line option.
+The entry value is ignored unless it is a valid path and file.
+
+F1   Help
+F2   About
+F3   Browse for source file
+F4   Reload project file
+
+If the project file is not found the program will issue a
+warning and start with default settings.
+If the saved paths are not valid warnings will be issued.
+Use Project/Save to create a new project file.
+
+Project files:
+    Lines without a ~ in the line are treated as comments.
+    Lines with # in position 0 are treated as comments.
+    If the same keyword appears more than once only the last one is used.
+        This does not apply to SourcesList. Each entry is added to the list.
+
+1. To use as a shortcut in Windows, create a link as follows: (modify paths as needed)
+    Target:   C:\Python34\pythonw.exe C:\Users\dbkaynox\DougPython\PyCopyMoveTk.py.
+    Start in: C:\Users\dbkaynox\DougPython.
+    The shortcut may also be placed in the sendto folder (Start search, shell:sendto)
+    A file may be dropped on the shortcut when using Windows. The program will start with
+    that file as the source file.
+
+2. The browse button allow overriding the associated items.
+    The changes are not saved unless the project is saved.
+3. Option changes are not saved unless the project is saved.
+4. Mouse double click left button will add a selected line
+    in the list box to the source entry.
