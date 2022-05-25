@@ -6,7 +6,7 @@ PyCopyMoveTk
         send2trash module
     auxfiles folder and the following contents:
         MultiListbox.py
-        _ToolTip.py
+        ToolTip.py
         PyCopyMoveTk.hlp  (This is a text file)
         PyCopyMoveTk.prjl (Linux project file)
         PyCopyMoveTk.prjw (Windows project file)
