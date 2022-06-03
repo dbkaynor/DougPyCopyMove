@@ -46,12 +46,13 @@ from DougModules import DiskSpace
 # from DougModules import SetUpLogger
 from DougModules import RemoveAFile
 from DougModules import ShowEditFile
-
-
 Main = tkinter.Tk()
+from PyCopyMoveVars import Vars  # noqa: E402
+
+
 pp = pprint.PrettyPrinter(indent=4)
-from PyCopyMoveVars import Vars
-Vars.ProgramVersionNumber.set('1.0.1')
+
+Vars.ProgramVersionNumber.set('1.1.0')
 
 debugFile = "DougPyCopyMove.txt"
 if os.path.exists(debugFile):
@@ -66,7 +67,7 @@ def line_info(message="nothing", show=False):
     file1.write(tString)
     file1.close()
     if show:
-        print(tString)
+        line_info(tString)
 
 # ------------------------------
 # Parse the command line
@@ -117,7 +118,7 @@ def ParseCommandLine():
 
 
 def SetDefaults():
-    # print(MyTrace(GFI(CF())), 'SetDefaults')
+    # line_info('SetDefaults')
     Vars.KeepFlagsCheckVar.set(1)
     Vars.CheckSourceOnStartVar.set(1)
     Vars.ClearSourceOnStartVar.set(0)
@@ -150,7 +151,19 @@ def SetDefaults():
 
 def StartUpStuff():
     # -- Lots of startup stuff ------------------------------------
-    # The following are defaults which will be over written by a project file
+    # The some of the following are defaults which will be over written by a project file
+    Vars.StartUpDirectoryVar.set(os.getcwd())
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    Vars.ExecutableDirectoryVar.set(os.path.dirname(__file__))
+    Vars.AuxDirectoryVar.set(os.path.join(
+        Vars.ExecutableDirectoryVar.get(), 'auxfiles', '.'))
+    Vars.HelpFileVar.set(os.path.join(
+        Vars.AuxDirectoryVar.get(), 'PyCopyMoveTk.hlp'))
+    Vars.LogFileNameVar.set(os.path.join(
+        Vars.ExecutableDirectoryVar.get(), 'PyCopyMoveTk.log'))
+    #  SetUpLogger(Vars.LogFileNameVar.get())
+
     if sys.platform.startswith('linux'):
         Vars.SystemEditorVar.set('gedit')
         Vars.SystemRenamerVar.set('pyrename')
@@ -160,15 +173,6 @@ def StartUpStuff():
         Vars.SystemRenamerVar.set(
             'C:\\Program Files (x86)\\Ant Renamer\\Renamer.exe')
         Vars.ProjectFileExtensionVar.set('prjw')
-
-    Vars.StartUpDirectoryVar.set(os.getcwd())
-    Vars.AuxDirectoryVar.set(os.path.join(
-        Vars.StartUpDirectoryVar.get(), 'auxfiles', '.'))
-    Vars.HelpFileVar.set(os.path.join(
-        Vars.AuxDirectoryVar.get(), 'PyCopyMoveTk.hlp'))
-    Vars.LogFileNameVar.set(os.path.join(
-        Vars.StartUpDirectoryVar.get(), 'PyCopyMoveTk.log'))
-    #  SetUpLogger(Vars.LogFileNameVar.get())
 
     line_info(' '.join(['OS:', str(os.environ.get('OS'))]))
     line_info(' '.join(['Platform:', str(platform.uname())]))
@@ -182,7 +186,7 @@ def StartUpStuff():
 
 
 def GetClipBoard():
-    # print(MyTrace(GFI(CF())), 'GetClipBoard')
+    # line_info('GetClipBoard')
     try:
         temp = Main.clipboard_get()
         temp = temp.replace('"', '').strip()
@@ -276,22 +280,22 @@ class FileRename:
 
         FileRenameFrame1 = tkinter.Frame(
             Vars.FileRenameTopLevelVar, relief=tkinter.SUNKEN, bd=1)
-        FileRenameFrame1.pack(side=tkinter.tkinter.TOP, fill=tkinter.x)
+        FileRenameFrame1.pack(side=tkinter.TOP, fill=tkinter.X)
         FileRenameFrame2 = tkinter.Frame(
             Vars.FileRenameTopLevelVar, relief=tkinter.SUNKEN, bd=1)
-        FileRenameFrame2.pack(side=tkinter.tkinter.TOP, fill=tkinter.x)
+        FileRenameFrame2.pack(side=tkinter.TOP, fill=tkinter.X)
         FileRenameFrame3 = tkinter.Frame(
             Vars.FileRenameTopLevelVar, relief=tkinter.SUNKEN, bd=1)
-        FileRenameFrame3.pack(side=tkinter.tkinter.TOP, fill=tkinter.x)
+        FileRenameFrame3.pack(side=tkinter.TOP, fill=tkinter.X)
 
         # Start here
         self.BeforeFilename = FileSourceEntry.get()
         self.Basename = os.path.basename(self.BeforeFilename)
         self.Path = os.path.dirname(self.BeforeFilename)
 
-        tkinter.Label(FileRenameFrame1, text=self.BeforeFilename).pack(fill=tkinter.x)
+        tkinter.Label(FileRenameFrame1, text=self.BeforeFilename).pack(fill=tkinter.X)
         self.RenameEntry = tkinter.Entry(FileRenameFrame1)
-        self.RenameEntry.pack(fill=tkinter.x)
+        self.RenameEntry.pack(fill=tkinter.X)
         self.RenameEntry.delete(0, tkinter.END)
         self.RenameEntry.insert(0, self.Basename)
         self.RenameEntry.focus_set()
@@ -333,7 +337,7 @@ class FileRename:
 
 
 def ProjectLoad(LoadType='none'):  # noqa: C901
-    # print(MyTrace(GFI(CF())),'ProjectLoad' , LoadType)
+    # line_info('ProjectLoad' + LoadType)
     if LoadType == 'default':
         Vars.ProjectFileNameVar.set(os.path.join(Vars.AuxDirectoryVar.get(),
                                                  ''.join(['PyCopyMoveTk.',
@@ -728,7 +732,7 @@ def BrowseDestinationFile(Destination):  # noqa: C901
             DestinationEntry08.insert(0, DestinationName)
             Vars.DestinationCheck08Var.set(1)
         elif Destination == '09':
-            DestinationEntry09.delete(0, tkinter.tkinter.END)
+            DestinationEntry09.delete(0, tkinter.END)
             DestinationEntry09.insert(0, DestinationName)
             Vars.DestinationCheck09Var.set(1)
         elif Destination == '10':
@@ -784,7 +788,7 @@ def CopyOrMoveActions(Action, Src, Dest):  # noqa: C901
 
         if Vars.AskBeforeOverWriteDuringCopyVar.get():
             if os.path.isfile(os.path.join(Dest, os.path.split(Src)[1])):
-                # print(MyTrace(GFI(CF())),os.path.join(Dest))
+                # line_info(os.path.join(Dest))
                 if not tkinter.messagebox.askyesno('Source file exists',
                                                    os.linesep.join([Dest,
                                                                     'Source file exists in destination.',
@@ -1134,8 +1138,18 @@ def VerifyPaths(Type=''):  # noqa: C901
 
 def About():
     line_info(main.Vars.StartUpDirectoryVar.get())
+    line_info(main.Vars.ExecutableDirectoryVar.get())
     tkinter.messagebox.showinfo('About',
-                                os.linesep.join([main.Vars.StartUpDirectoryVar.get(),
+                                os.linesep.join([' '.join(['StartUp Directory:',
+                                                           main.Vars.StartUpDirectoryVar.get()]),
+                                                 ' '.join(['Executable Directory:',
+                                                           main.Vars.ExecutableDirectoryVar.get()]),
+
+                                                 ' '.join(['OS:', str(os.environ.get('OS'))]),
+                                                 ' '.join(['Platform:', str(platform.uname())]),
+                                                 ' '.join(['Number of argument(s):', str(len(sys.argv))]),
+                                                 ' '.join(['Argument List:', str(sys.argv)]),
+
                                                  Main.geometry(),
                                                  ''.join([str(Main.winfo_screenwidth()),
                                                           'x',
@@ -1196,9 +1210,9 @@ def ShowPopupmenu(e):
         "Copy", command=lambda: w.event_generate("<<Copy>>"))
     Popupmenu.entryconfigure(
         "Paste", command=lambda: w.event_generate("<<Paste>>"))
-    Popupmenu.entryconfigure("Clear", command=lambda: w.delete(0, tkinter.tkinter.END))
+    Popupmenu.entryconfigure("Clear", command=lambda: w.delete(0, tkinter.END))
     Popupmenu.entryconfigure(
-        "Select", command=lambda: w.select_range(0, tkinter.tkinter.END))
+        "Select", command=lambda: w.select_range(0, tkinter.END))
     Popupmenu.tk.call("tk_popup", Popupmenu, e.x_root, e.y_root)
 
 # ------------------------------
@@ -1277,7 +1291,7 @@ FileFrame1.pack(fill=tkinter.X,
                 side=tkinter.TOP)
 tkinter.Label(FileFrame1,
               text='Source file',
-              font=("Helvetica", 15)).pack(side=tkinter.tkinter.TOP,
+              font=("Helvetica", 15)).pack(side=tkinter.TOP,
                                            fill=tkinter.BOTH,
                                            expand=tkinter.YES)
 
@@ -1289,7 +1303,7 @@ ToolTip(BrowseSourceButton, 'Browse for one or more source file')
 FileSourceEntry = tkinter.Entry(FileFrame1,
                                 relief=tkinter.SUNKEN,
                                 bd=2)
-FileSourceEntry.pack(fill=tkinter.x)
+FileSourceEntry.pack(fill=tkinter.X)
 ToolTip(FileSourceEntry, 'Path for the source file')
 
 MakePopupmenu(Main)
@@ -1301,7 +1315,7 @@ FileSourceEntry.bind_class("Entry",
 FileFrame2 = tkinter.Frame(Main,
                            relief=tkinter.SUNKEN,
                            bd=1)
-FileFrame2.pack(side=tkinter.tkinter.TOP,
+FileFrame2.pack(side=tkinter.TOP,
                 fill=tkinter.BOTH,
                 expand=tkinter.YES)
 
@@ -1315,15 +1329,15 @@ ToolTip(FileFrame3, 'Operations to the source list')
 tkinter.Button(FileFrame3,
                text='Add',
                width=8,
-               command=lambda: SourceListOperations('Add')).pack(side=tkinter.tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
+               command=lambda: SourceListOperations('Add')).pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
 tkinter.Button(FileFrame3,
                text='Fetch',
                width=8,
-               command=lambda: SourceListOperations('Fetch')).pack(side=tkinter.tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
+               command=lambda: SourceListOperations('Fetch')).pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
 tkinter.Button(FileFrame3,
                text='Remove',
                width=8,
-               command=lambda: SourceListOperations('Remove')).pack(side=tkinter.tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
+               command=lambda: SourceListOperations('Remove')).pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
 
 FileFrame4 = tkinter.Frame(FileFrame2,
                            relief=tkinter.SUNKEN,
@@ -1339,7 +1353,7 @@ yScroll.pack(side=tkinter.RIGHT,
 xScroll = tkinter.Scrollbar(FileFrame4,
                             orient=tkinter.HORIZONTAL)
 xScroll.pack(side=tkinter.BOTTOM,
-             fill=tkinter.x)
+             fill=tkinter.X)
 FileSourceListbox = tkinter.Listbox(FileFrame4,
                                     height=6,
                                     yscrollcommand=yScroll.set,
@@ -1355,13 +1369,13 @@ xScroll.config(command=FileSourceListbox.xview)
 
 OperationFrame = tkinter.Frame(Main,
                                relief=tkinter.SUNKEN, bd=1)
-OperationFrame.pack(side=tkinter.tkinter.TOP,
+OperationFrame.pack(side=tkinter.TOP,
                     fill=tkinter.X,
                     expand=tkinter.YES)
 ToolTip(OperationFrame, 'Click a button to perform action')
 tkinter.Label(OperationFrame,
               text='Operations',
-              font=("Helvetica", 15)).pack(side=tkinter.tkinter.TOP,
+              font=("Helvetica", 15)).pack(side=tkinter.TOP,
                                            fill=tkinter.BOTH,
                                            expand=tkinter.YES)
 
@@ -1397,19 +1411,19 @@ tkinter.Button(OperationFrame,
 DestinationFrame = tkinter.Frame(Main,
                                  relief=tkinter.SUNKEN,
                                  bd=1)
-DestinationFrame.pack(fill=tkinter.x)
+DestinationFrame.pack(fill=tkinter.X)
 ToolTip(DestinationFrame, 'Chose/add a destination path')
 tkinter.Label(DestinationFrame,
               text='Destination directories',
-              font=("Helvetica", 15)).pack(side=tkinter.tkinter.TOP,
+              font=("Helvetica", 15)).pack(side=tkinter.TOP,
                                            fill=tkinter.BOTH,
                                            expand=tkinter.YES)
 
 DestinationFrame00 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN,
                                    bd=1)
-DestinationFrame00.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame00.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 ToggleAllButton = tkinter.Button(DestinationFrame00,
                                  width=15,
                                  text='Toggle all',
@@ -1430,8 +1444,8 @@ ToolTip(VerifyPathsButton, 'Verify all destination paths')
 
 DestinationFrame01 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame01.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame01.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame01,
                     text='Dest01',
                     variable=Vars.DestinationCheck01Var).pack(side=tkinter.LEFT)
@@ -1446,8 +1460,8 @@ DestinationEntry01.pack(side=tkinter.LEFT,
 DestinationFrame02 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN,
                                    bd=1)
-DestinationFrame02.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame02.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame02,
                     text='Dest02',
                     variable=Vars.DestinationCheck02Var).pack(side=tkinter.LEFT)
@@ -1462,8 +1476,8 @@ DestinationEntry02.pack(side=tkinter.LEFT,
 DestinationFrame03 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN,
                                    bd=1)
-DestinationFrame03.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame03.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame03,
                     text='Dest03',
                     variable=Vars.DestinationCheck03Var).pack(side=tkinter.LEFT)
@@ -1477,8 +1491,8 @@ DestinationEntry03.pack(side=tkinter.LEFT,
 
 DestinationFrame04 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame04.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame04.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame04,
                     text='Dest04',
                     variable=Vars.DestinationCheck04Var).pack(side=tkinter.LEFT)
@@ -1492,8 +1506,8 @@ DestinationEntry04.pack(side=tkinter.LEFT,
 
 DestinationFrame05 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame05.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame05.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame05,
                     text='Dest05',
                     variable=Vars.DestinationCheck05Var).pack(side=tkinter.LEFT)
@@ -1508,8 +1522,8 @@ DestinationEntry05.pack(side=tkinter.LEFT,
 DestinationFrame06 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN,
                                    bd=1)
-DestinationFrame06.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame06.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame06,
                     text='Dest06',
                     variable=Vars.DestinationCheck06Var).pack(side=tkinter.LEFT)
@@ -1523,8 +1537,8 @@ DestinationEntry06.pack(side=tkinter.LEFT,
 
 DestinationFrame07 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame07.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame07.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame07,
                     text='Dest07',
                     variable=Vars.DestinationCheck07Var).pack(side=tkinter.LEFT)
@@ -1537,14 +1551,14 @@ DestinationEntry07.pack(side=tkinter.LEFT,
                         expand=tkinter.TRUE)
 
 DestinationFrame08 = tkinter.Frame(DestinationFrame, relief=tkinter.SUNKEN, bd=1)
-DestinationFrame08.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame08.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame08,
                     text='Dest08',
                     variable=Vars.DestinationCheck08Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame08,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('08')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame08,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('08')).pack(side=tkinter.LEFT)
 DestinationEntry08 = tkinter.Entry(DestinationFrame08)
 DestinationEntry08.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
@@ -1552,27 +1566,27 @@ DestinationEntry08.pack(side=tkinter.LEFT,
 
 DestinationFrame09 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame09.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame09.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame09,
                     text='Dest09',
                     variable=Vars.DestinationCheck09Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame09,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('09')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame09,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('09')).pack(side=tkinter.LEFT)
 DestinationEntry09 = tkinter.Entry(DestinationFrame09)
 DestinationEntry09.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
                         expand=tkinter.TRUE)
 
 DestinationFrame10 = tkinter.Frame(DestinationFrame, relief=tkinter.SUNKEN, bd=1)
-DestinationFrame10.pack(side=tkinter.tkinter.TOP, fill=tkinter.x)
+DestinationFrame10.pack(side=tkinter.TOP, fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame10,
                     text='Dest10',
                     variable=Vars.DestinationCheck10Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame10,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('10')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame10,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('10')).pack(side=tkinter.LEFT)
 DestinationEntry10 = tkinter.Entry(DestinationFrame10)
 DestinationEntry10.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
@@ -1580,14 +1594,14 @@ DestinationEntry10.pack(side=tkinter.LEFT,
 
 DestinationFrame11 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame11.pack(side=tkinter.tkinter.TOP,
+DestinationFrame11.pack(side=tkinter.TOP,
                         fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame11,
                     text='Dest11',
                     variable=Vars.DestinationCheck11Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame11,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('11')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame11,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('11')).pack(side=tkinter.LEFT)
 DestinationEntry11 = tkinter.Entry(DestinationFrame11)
 DestinationEntry11.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
@@ -1595,14 +1609,14 @@ DestinationEntry11.pack(side=tkinter.LEFT,
 
 DestinationFrame12 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame12.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame12.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame12,
                     text='Dest12',
                     variable=Vars.DestinationCheck12Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame12,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('12')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame12,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('12')).pack(side=tkinter.LEFT)
 DestinationEntry12 = tkinter.Entry(DestinationFrame12)
 DestinationEntry12.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
@@ -1610,14 +1624,14 @@ DestinationEntry12.pack(side=tkinter.LEFT,
 
 # ------------------------------
 StatusFrame = tkinter.Frame(Main, relief=tkinter.SUNKEN, bd=1)
-StatusFrame.pack(fill=tkinter.x)
+StatusFrame.pack(fill=tkinter.X)
 tkinter.Label(StatusFrame, text='Status', font=("Helvetica", 15)).pack(
-    side=tkinter.tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
+    side=tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
 Statuslabel = tkinter.Label(StatusFrame, textvariable=Vars.StatusVar, relief=tkinter.GROOVE)
-Statuslabel.pack(side=tkinter.tkinter.TOP, expand=tkinter.TRUE, fill=tkinter.x)
+Statuslabel.pack(side=tkinter.TOP, expand=tkinter.TRUE, fill=tkinter.X)
 ToolTip(Statuslabel, 'Display status')
 ProjectEntry = tkinter.Entry(StatusFrame)
-ProjectEntry.pack(side=tkinter.tkinter.TOP, expand=tkinter.TRUE, fill=tkinter.x)
+ProjectEntry.pack(side=tkinter.TOP, expand=tkinter.TRUE, fill=tkinter.X)
 ToolTip(ProjectEntry, 'Currently loaded project')
 # ------------------------------
 

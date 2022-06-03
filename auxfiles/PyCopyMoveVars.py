@@ -1,5 +1,5 @@
 from tkinter import *
-#------------------------------
+# ------------------------------
 
 
 class Vars():
@@ -35,6 +35,7 @@ class Vars():
     SystemEditorVar = StringVar()
     SystemRenamerVar = StringVar()
     StartUpDirectoryVar = StringVar()
+    ExecutableDirectoryVar = StringVar()
     AuxDirectoryVar = StringVar()
     HelpFileVar = StringVar()
     CommentsListVar = []
