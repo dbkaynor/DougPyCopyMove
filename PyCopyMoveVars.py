@@ -37,9 +37,11 @@ class Vars():
     StartUpDirectoryVar = StringVar()
     ExecutableDirectoryVar = StringVar()
     AuxDirectoryVar = StringVar()
+    #  HelpFileVar = StringVar()
+    # Geometry = StringVar()
+    StartUpDirectoryVar = StringVar()
     HelpFileVar = StringVar()
     CommentsListVar = []
     FileNameListVar = []
     HelpTopLevelVar = None
     FileRenameTopLevelVar = None
-    Geometry = StringVar()

@@ -49,12 +49,14 @@ from DougModules import ShowEditFile
 Main = tkinter.Tk()
 from PyCopyMoveVars import Vars  # noqa: E402
 
-
 pp = pprint.PrettyPrinter(indent=4)
 
 Vars.ProgramVersionNumber.set('1.1.0')
 
-debugFile = "DougPyCopyMove.txt"
+Vars.StartUpDirectory.set(os.path.split(sys.argv[0])[0])
+# Vars.HelpFileVar.set(os.path.join(StartUpDirectoryVar.get(), 'DougPyCopyMove.hlp'))
+
+debugFile = os.path.join(Vars.StartUpDirectory.get(), "DougPyCopyMove.txt")
 if os.path.exists(debugFile):
     os.remove(debugFile)
 
@@ -1137,14 +1139,11 @@ def VerifyPaths(Type=''):  # noqa: C901
 
 
 def About():
-    line_info(main.Vars.StartUpDirectoryVar.get())
-    line_info(main.Vars.ExecutableDirectoryVar.get())
     tkinter.messagebox.showinfo('About',
                                 os.linesep.join([' '.join(['StartUp Directory:',
                                                            main.Vars.StartUpDirectoryVar.get()]),
                                                  ' '.join(['Executable Directory:',
                                                            main.Vars.ExecutableDirectoryVar.get()]),
-
                                                  ' '.join(['OS:', str(os.environ.get('OS'))]),
                                                  ' '.join(['Platform:', str(platform.uname())]),
                                                  ' '.join(['Number of argument(s):', str(len(sys.argv))]),
