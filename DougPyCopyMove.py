@@ -50,10 +50,12 @@ from DougModules import ShowEditFile
 
 Main = tkinter.Tk()
 pp = pprint.PrettyPrinter(indent=4)
-from PyCopyMoveVars import Vars
+from DougPyCopyMoveVars import Vars   # noqa: E402
 Vars.ProgramVersionNumber.set('1.0.1')
 
-debugFile = "DougPyCopyMove.txt"
+Vars.StartUpDirectoryVar.set(os.path.split(sys.argv[0])[0])
+os.chdir(Vars.StartUpDirectoryVar.get())
+debugFile = os.path.join(Vars.StartUpDirectoryVar.get(), "DougPyCopyMove.txt")
 if os.path.exists(debugFile):
     os.remove(debugFile)
 
@@ -67,6 +69,7 @@ def line_info(message="nothing", show=False):
     file1.close()
     if show:
         print(tString)
+    return os.linesep.join([tString])
 
 # ------------------------------
 # Parse the command line
@@ -161,13 +164,11 @@ def StartUpStuff():
             'C:\\Program Files (x86)\\Ant Renamer\\Renamer.exe')
         Vars.ProjectFileExtensionVar.set('prjw')
 
-    Vars.StartUpDirectoryVar.set(os.getcwd())
-    Vars.AuxDirectoryVar.set(os.path.join(
-        Vars.StartUpDirectoryVar.get(), 'auxfiles', '.'))
+   #  Vars.StartUpDirectoryVar.set(os.getcwd())
     Vars.HelpFileVar.set(os.path.join(
-        Vars.AuxDirectoryVar.get(), 'PyCopyMoveTk.hlp'))
+        Vars.StartUpDirectoryVar.get(), 'DougPyCopyMove.hlp'))
     Vars.LogFileNameVar.set(os.path.join(
-        Vars.StartUpDirectoryVar.get(), 'PyCopyMoveTk.log'))
+        Vars.StartUpDirectoryVar.get(), 'DougPyCopyMove.log'))
     #  SetUpLogger(Vars.LogFileNameVar.get())
 
     line_info(' '.join(['OS:', str(os.environ.get('OS'))]))
@@ -249,7 +250,7 @@ class FileRename:
         except OSError as e:
             line_info('Rename file error: %s' % e)
             tkinter.messagebox.showerror('Rename file error',
-                                         os.linesep.join(['no can do',
+                                         os.linesep.join([line_info('no can do'),
                                                           ''.join(['Before filename:', self.BeforeFilename]),
                                                           ''.join(['After filename:', self.AfterFilename]),
                                                           'Return code: %s' % e]))
@@ -276,22 +277,22 @@ class FileRename:
 
         FileRenameFrame1 = tkinter.Frame(
             Vars.FileRenameTopLevelVar, relief=tkinter.SUNKEN, bd=1)
-        FileRenameFrame1.pack(side=tkinter.tkinter.TOP, fill=tkinter.x)
+        FileRenameFrame1.pack(side=tkinter.TOP, fill=tkinter.X)
         FileRenameFrame2 = tkinter.Frame(
             Vars.FileRenameTopLevelVar, relief=tkinter.SUNKEN, bd=1)
-        FileRenameFrame2.pack(side=tkinter.tkinter.TOP, fill=tkinter.x)
+        FileRenameFrame2.pack(side=tkinter.TOP, fill=tkinter.X)
         FileRenameFrame3 = tkinter.Frame(
             Vars.FileRenameTopLevelVar, relief=tkinter.SUNKEN, bd=1)
-        FileRenameFrame3.pack(side=tkinter.tkinter.TOP, fill=tkinter.x)
+        FileRenameFrame3.pack(side=tkinter.TOP, fill=tkinter.X)
 
         # Start here
         self.BeforeFilename = FileSourceEntry.get()
         self.Basename = os.path.basename(self.BeforeFilename)
         self.Path = os.path.dirname(self.BeforeFilename)
 
-        tkinter.Label(FileRenameFrame1, text=self.BeforeFilename).pack(fill=tkinter.x)
+        tkinter.Label(FileRenameFrame1, text=self.BeforeFilename).pack(fill=tkinter.X)
         self.RenameEntry = tkinter.Entry(FileRenameFrame1)
-        self.RenameEntry.pack(fill=tkinter.x)
+        self.RenameEntry.pack(fill=tkinter.X)
         self.RenameEntry.delete(0, tkinter.END)
         self.RenameEntry.insert(0, self.Basename)
         self.RenameEntry.focus_set()
@@ -335,17 +336,17 @@ class FileRename:
 def ProjectLoad(LoadType='none'):  # noqa: C901
     # print(MyTrace(GFI(CF())),'ProjectLoad' , LoadType)
     if LoadType == 'default':
-        Vars.ProjectFileNameVar.set(os.path.join(Vars.AuxDirectoryVar.get(),
-                                                 ''.join(['PyCopyMoveTk.',
+        Vars.ProjectFileNameVar.set(os.path.join(Vars.StartUpDirectoryVar.get(),
+                                                 ''.join(['DougPyCopyMove.',
                                                           Vars.ProjectFileExtensionVar.get()])))
     else:
         Vars.ProjectFileNameVar.set(tkinter.filedialog.askopenfilename(
-            defaultextensio=Vars.ProjectFileExtensionVar.get(),
-            filetypes=[('Project file', ''.join(['PyCopyMove*.',
+            defaultextension=Vars.ProjectFileExtensionVar.get(),
+            filetypes=[('Project file', ''.join(['DougPyCopyMove*.',
                         Vars.ProjectFileExtensionVar.get()])), ('All files', '*.*')],
-            initialdir=Vars.AuxDirectoryVar.get(),
-            initialfile=''.join(['PyCopyMoveTk.', Vars.ProjectFileExtensionVar.get()]),
-            title='Load a PyCopyMoveTk project file',
+            initialdir=Vars.StartUpDirectoryVar.get(),
+            initialfile=''.join(['DougPyCopyMove.', Vars.ProjectFileExtensionVar.get()]),
+            title='Load a DougPyCopyMove project file',
             parent=Main))
     Vars.ProjectFileNameVar.set(
         os.path.normpath(Vars.ProjectFileNameVar.get()))
@@ -361,22 +362,27 @@ def ProjectLoad(LoadType='none'):  # noqa: C901
     except IOError:
         tkinter.messagebox.showerror('Project file error',
                                      os.linesep.join(['Requested file does not exist.',
-                                                      Vars.ProjectFileNameVar.get()]))
+                                     Vars.ProjectFileNameVar.get(),
+                                     os.linesep,
+                                     line_info('')]))
         return
 
     lines = f.readlines()
     f.close()
     try:
-        if not 'PyCopyMoveTk.py project file ' + sys.platform in lines[0]:
+        if not ''.join(['DougPyCopyMove.py project file ', sys.platform]) in lines[0]:
             tkinter.messagebox.showerror('Project file error',
-                                         os.linesep.join(['Not a valid project file.',
+                                         os.linesep.join([line_info(os.linesep,
+                                                          'Not a valid project file.'),
                                                           'project file', lines[0]]))
-            line_info(' '.join(['PyCopyMoveTk.py project file', lines[0].strip()]))
+            line_info(' '.join(['DougPyCopyMove.py project file', lines[0].strip()]))
             return
     except IOError:
         tkinter.messagebox.showerror('Project file error',
-                                     ' '.join(['Unable to read project file', Vars.ProjectFileNameVar.get()]))
-        line_info('PyCopyMoveTk.py project file. Unable to read file')
+                                     ' '.join([line_info(os.linesep,
+                                               'Unable to read project file'),
+                                               Vars.ProjectFileNameVar.get()]))
+        line_info('DougPyCopyMove.py project file. Unable to read file')
         return
 
     # remove the first line so it won't be added to the comments list
@@ -515,7 +521,8 @@ def ProjectLoad(LoadType='none'):  # noqa: C901
 def ProjectSave():
     line_info(' '.join(['ProjectSave', Vars.ProjectFileNameVar.get()]))
     if VerifyPaths('Save') != 0:
-        if tkinter.messagebox.askyesno('Bad paths detected', 'Do you want to continue?') is False:
+        if tkinter.messagebox.askyesno(line_info('Bad paths detected'),
+                                       'Do you want to continue?') is False:
             line_info('Project saved aborted. Bad path detected.')
             return
 
@@ -527,9 +534,9 @@ def ProjectSave():
             filetypes=[('Project file', ''.join(['PyCopyMove*.',
                                                  Vars.ProjectFileExtensionVar.get()]),
                         ('All files', '*.*'))],
-            initialdir=Vars.AuxDirectoryVar.get(),
-            initialfile=''.join(['PyCopyMoveTk', Vars.ProjectFileExtensionVar.get()],
-                                title='Save a PyCopyMoveTk project file',
+            initialdir=Vars.StartUpDirectoryVar.get(),
+            initialfile=''.join(['DougPyCopyMove', Vars.ProjectFileExtensionVar.get()],
+                                title='Save aDougPyCopyMove project file',
                                 parent=Main)))
 
     line_info(Vars.ProjectFileNameVar.get())
@@ -541,14 +548,14 @@ def ProjectSave():
     try:
         f = open(Vars.ProjectFileNameVar.get(), 'w')
     except IOError:
-        tkinter.messagebox.showerror('Project file error',
+        tkinter.messagebox.showerror(line_info('Project file error'),
                                      os.linesep.join(['Unable to open requested file.>>',
                                                       Vars.ProjectFileNameVar.get(), '<<']))
 
     if not Vars.ProjectFileNameVar.get():
         return
 
-    f.write(''.join(['PyCopyMoveTk.py project file ', sys.platform, os.linesep]))
+    f.write(''.join(['DougPyCopyMove.py project file ', sys.platform, os.linesep]))
     for item in Vars.CommentsListVar:
         f.write(item)
     f.write(''.join(['DestinationEntry01~', DestinationEntry01.get().strip(), os.linesep]))
@@ -676,7 +683,7 @@ def BrowseDestinationFile(Destination):  # noqa: C901
         temp = DestinationEntry12.get()
     if not os.path.isdir(temp):
         tkinter.messagebox.showerror('Destination error',
-                                     os.linesep.join(['Destination directory does not exist',
+                                     os.linesep.join([line_info('Destination directory does not exist'),
                                                       temp]))
         line_info(os.linesep.join(['Destination error. Current destination directory does not exist.',
                                    temp]))
@@ -728,7 +735,7 @@ def BrowseDestinationFile(Destination):  # noqa: C901
             DestinationEntry08.insert(0, DestinationName)
             Vars.DestinationCheck08Var.set(1)
         elif Destination == '09':
-            DestinationEntry09.delete(0, tkinter.tkinter.END)
+            DestinationEntry09.delete(0, tkinter.END)
             DestinationEntry09.insert(0, DestinationName)
             Vars.DestinationCheck09Var.set(1)
         elif Destination == '10':
@@ -754,7 +761,7 @@ def CopyOrMoveActions(Action, Src, Dest):  # noqa: C901
     # remove leading and trailing double quotes
     Dest = Dest.strip('\n').replace('\"', '')
     if not os.path.isfile(Src):
-        tkinter.messagebox.showerror('Source error',
+        tkinter.messagebox.showerror(line_info('Source error'),
                                      os.linesep.join(['Source is not a file or does not exist.',
                                                       Src]))
         line_info(' '.join([Action,
@@ -762,7 +769,7 @@ def CopyOrMoveActions(Action, Src, Dest):  # noqa: C901
                             Src]))
         return
     if not os.path.isdir(Dest):
-        tkinter.messagebox.showerror('Destination error',
+        tkinter.messagebox.showerror(line_info('Destination error'),
                                      ' '.join(['Destination is not a directory',
                                                Dest]))
         line_info(' '.join([Action,
@@ -772,7 +779,7 @@ def CopyOrMoveActions(Action, Src, Dest):  # noqa: C901
 
     if Action == 'Copy':
         if Vars.AskOnCopyVar.get():
-            if not tkinter.messagebox.askyesno('Proceed with copy?',
+            if not tkinter.messagebox.askyesno(line_info('Proceed with copy?'),
                                                os.linesep.join(['Proceed with copy?',
                                                                 'Source: ', Src,
                                                                 'Destination: ', Dest])):
@@ -785,7 +792,7 @@ def CopyOrMoveActions(Action, Src, Dest):  # noqa: C901
         if Vars.AskBeforeOverWriteDuringCopyVar.get():
             if os.path.isfile(os.path.join(Dest, os.path.split(Src)[1])):
                 # print(MyTrace(GFI(CF())),os.path.join(Dest))
-                if not tkinter.messagebox.askyesno('Source file exists',
+                if not tkinter.messagebox.askyesno(line_info('Source file exists'),
                                                    os.linesep.join([Dest,
                                                                     'Source file exists in destination.',
                                                                     'Overwrite?'])):
@@ -798,14 +805,14 @@ def CopyOrMoveActions(Action, Src, Dest):  # noqa: C901
                 shutil.copy(Src, Dest)  # Copy with flags
         except shutil.Error as e:
             line_info(' '.join([Action, 'error. Error: %s' % e]))
-            tkinter.messagebox.showerror('Copy error', e)
+            tkinter.messagebox.showerror(line_info('Copy error'), e)
         except OSError as e:
             line_info(' '.join([Action, 'error: %s' % e]))
-            tkinter.messagebox.showerror('Copy error', e)
+            tkinter.messagebox.showerror(line_info('Copy error'), e)
 
     if Action == 'Move':
         if Vars.AskOnMoveVar.get():
-            if not tkinter.messagebox.askyesno('Move file',
+            if not tkinter.messagebox.askyesno(line_info('Move file'),
                                                'Proceed with move?\nSource: ' + Src + '\nDestination: ' + Dest):
                 line_info(os.linesep.join([Action,
                                            'aborted by user.',
@@ -817,7 +824,7 @@ def CopyOrMoveActions(Action, Src, Dest):  # noqa: C901
         if os.path.isfile(DestFileName):
             if Vars.AskBeforeOverWriteDuringMoveVar.get():
                 if not tkinter.messagebox.askyesno('Move question',
-                                                   os.linesep.join(['Source file exists in destination.',
+                                                   os.linesep.join([line_info('Source file exists in destination.'),
                                                                     'Overwrite?',
                                                                     FileStats(DestFileName, Short=True)])):
                     line_info(' '.join(['Move overwrite aborted. ', Src, Dest]))
@@ -833,11 +840,11 @@ def CopyOrMoveActions(Action, Src, Dest):  # noqa: C901
         except shutil.Error as e:
             line_info(os.linesep.join([Action,
                                        'error. Error: %s' % e]))
-            tkinter.messagebox.showerror('Move error\n', e)
+            tkinter.messagebox.showerror(line_info('Move error\n'), e)
         except OSError as e:
             line_info(os.linesep.join([Action,
                                        'error: %s' % e]))
-            tkinter.messagebox.showerror('Move error\n', e)
+            tkinter.messagebox.showerror(line_info('Move error\n'), e)
     line_info(os.linesep.join([' '.join([Action,
                                          'Source:',
                                          Src,
@@ -911,7 +918,8 @@ def CopyOrMove(Action):  # noqa: C901
     if count == 0:
         line_info(' '.join(['Copy Or Move. No destinations specified', Src]))
         tkinter.messagebox.showinfo(
-            'Copy Or Move', ' '.join(['No destinations specified', os.linesep, Src]))
+            'Copy Or Move', ' '.join([line_info('No destinations specified'),
+                                      os.linesep, Src]))
 # ------------------------------
 # Does the copy or move of the source file to the destination location
 
@@ -923,8 +931,8 @@ def DeleteRecycleRenameInfo(Action):  # noqa: C901
 
     if not os.path.isfile(Src) and Action != 'Info':
         line_info(' '.join([Action, 'Source is not a file', Src]))
-        tkinter.messagebox.showerror(
-            'Source error', 'Source is not a file\n' + Src)
+        tkinter.messagebox.showerror('Source error',
+                                     line_info('Source is not a file\n' + Src))
         return
 
     line_info(' '.join([Action, 'Source: ', Src]))
@@ -932,7 +940,7 @@ def DeleteRecycleRenameInfo(Action):  # noqa: C901
     if Action == 'Recycle':
         if Vars.AskOnRecycleVar.get():
             if not tkinter.messagebox.askyesno('Recycle',
-                                               os.linesep.join(['Recycle may not work unless drive is local!',
+                                               os.linesep.join([line_info('Recycle may not work unless drive is local!'),
                                                                 'Proceed with recycle?',
                                                                 'Source: ',
                                                                 Src])):
@@ -950,7 +958,7 @@ def DeleteRecycleRenameInfo(Action):  # noqa: C901
     if Action == 'Delete':
         if Vars.AskOnDeleteVar.get():
             if not tkinter.messagebox.askyesno('Delete file',
-                                               ' '.join(['Proceed with delete?\nSource:',
+                                               ' '.join([line_info('Proceed with delete?\nSource:'),
                                                          Src])):
                 line_info(' '.join([Action,
                                    'file abort by user. ',
@@ -971,7 +979,7 @@ def DeleteRecycleRenameInfo(Action):  # noqa: C901
         line_info(' '.join([Action, 'File information',
                             Src]))
         tkinter.messagebox.showinfo('File info',
-                                    FileStats(FileSourceEntry.get()))
+                                    line_info(FileStats(FileSourceEntry.get())))
 # ------------------------------
 # Fetch the current source file path from the file source list
 
@@ -1015,7 +1023,7 @@ def SourceListOperations(Operation):
 
 
 def ViewEditAnyFile():
-    ViewEditName = tkinter.filedialog.askopenfilename(initialdir=Vars.AuxDirectoryVar.get(),
+    ViewEditName = tkinter.filedialog.askopenfilename(initialdir=Vars.StartUpDirectoryVar.get(),
                                                       filetypes=[('All files', '*.*')],
                                                       title='Select a file',
                                                       parent=Main)
@@ -1123,10 +1131,10 @@ def VerifyPaths(Type=''):  # noqa: C901
     else:
         DestinationEntry12.configure(fg="green")
     # if len(Results) != 0:
-    #    xx=tkinter.messagebox.showerror('Invalid path(s)', 'Invalid path(s):\n' + Results)
+    #    xx=tkinter.messagebox.showerror('Invalid path(s)', line_info('Invalid path(s):\n' + Results))
     # else:
     #    if (Type != 'Save' and Type != 'Load'):
-    #        tkinter.messagebox.showinfo('All paths valid', 'All paths valid!')
+    #        tkinter.messagebox.showinfo('All paths valid', line_info('All paths valid!'))
     return(len(Results))  # 0 is No bad paths
 # ------------------------------
 # Some debug stuff
@@ -1134,7 +1142,7 @@ def VerifyPaths(Type=''):  # noqa: C901
 
 def About():
     line_info(main.Vars.StartUpDirectoryVar.get())
-    tkinter.messagebox.showinfo('About',
+    tkinter.messagebox.showinfo(line_info('About'),
                                 os.linesep.join([main.Vars.StartUpDirectoryVar.get(),
                                                  Main.geometry(),
                                                  ''.join([str(Main.winfo_screenwidth()),
@@ -1144,7 +1152,7 @@ def About():
                                                            platform.python_version()]),
                                                  ' '.join(['Platform:',
                                                            platform.platform()]),
-                                                 ' '.join(['PyCopyMoveTk version:',
+                                                 ' '.join(['DougPyCopyMove version:',
                                                            Vars.ProgramVersionNumber.get()])
                                                  ]))
 
@@ -1159,13 +1167,13 @@ def Help():
     try:
         f = open(Vars.HelpFileVar.get(), 'r')
     except IOError:
-        tkinter.messagebox.showerror('Help file error',
+        tkinter.messagebox.showerror(line_info('Help file error'),
                                      'Requested file does not exist.\n>>' + Vars.HelpFileVar.get() + '<<')
         return
     data = f.read()
     f.close()
 
-    MyMessageBox(Title='PyCopyMoveTk help',
+    MyMessageBox(Title='DougPyCopyMove help',
                  TextMessage=data,
                  Buttons=['OK', 'Cancel'],
                  LabelText=['This is a test label'],
@@ -1196,9 +1204,9 @@ def ShowPopupmenu(e):
         "Copy", command=lambda: w.event_generate("<<Copy>>"))
     Popupmenu.entryconfigure(
         "Paste", command=lambda: w.event_generate("<<Paste>>"))
-    Popupmenu.entryconfigure("Clear", command=lambda: w.delete(0, tkinter.tkinter.END))
+    Popupmenu.entryconfigure("Clear", command=lambda: w.delete(0, tkinter.END))
     Popupmenu.entryconfigure(
-        "Select", command=lambda: w.select_range(0, tkinter.tkinter.END))
+        "Select", command=lambda: w.select_range(0, tkinter.END))
     Popupmenu.tk.call("tk_popup", Popupmenu, e.x_root, e.y_root)
 
 # ------------------------------
@@ -1277,7 +1285,7 @@ FileFrame1.pack(fill=tkinter.X,
                 side=tkinter.TOP)
 tkinter.Label(FileFrame1,
               text='Source file',
-              font=("Helvetica", 15)).pack(side=tkinter.tkinter.TOP,
+              font=("Helvetica", 15)).pack(side=tkinter.TOP,
                                            fill=tkinter.BOTH,
                                            expand=tkinter.YES)
 
@@ -1289,7 +1297,7 @@ ToolTip(BrowseSourceButton, 'Browse for one or more source file')
 FileSourceEntry = tkinter.Entry(FileFrame1,
                                 relief=tkinter.SUNKEN,
                                 bd=2)
-FileSourceEntry.pack(fill=tkinter.x)
+FileSourceEntry.pack(fill=tkinter.X)
 ToolTip(FileSourceEntry, 'Path for the source file')
 
 MakePopupmenu(Main)
@@ -1301,7 +1309,7 @@ FileSourceEntry.bind_class("Entry",
 FileFrame2 = tkinter.Frame(Main,
                            relief=tkinter.SUNKEN,
                            bd=1)
-FileFrame2.pack(side=tkinter.tkinter.TOP,
+FileFrame2.pack(side=tkinter.TOP,
                 fill=tkinter.BOTH,
                 expand=tkinter.YES)
 
@@ -1315,15 +1323,15 @@ ToolTip(FileFrame3, 'Operations to the source list')
 tkinter.Button(FileFrame3,
                text='Add',
                width=8,
-               command=lambda: SourceListOperations('Add')).pack(side=tkinter.tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
+               command=lambda: SourceListOperations('Add')).pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
 tkinter.Button(FileFrame3,
                text='Fetch',
                width=8,
-               command=lambda: SourceListOperations('Fetch')).pack(side=tkinter.tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
+               command=lambda: SourceListOperations('Fetch')).pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
 tkinter.Button(FileFrame3,
                text='Remove',
                width=8,
-               command=lambda: SourceListOperations('Remove')).pack(side=tkinter.tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
+               command=lambda: SourceListOperations('Remove')).pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
 
 FileFrame4 = tkinter.Frame(FileFrame2,
                            relief=tkinter.SUNKEN,
@@ -1339,7 +1347,7 @@ yScroll.pack(side=tkinter.RIGHT,
 xScroll = tkinter.Scrollbar(FileFrame4,
                             orient=tkinter.HORIZONTAL)
 xScroll.pack(side=tkinter.BOTTOM,
-             fill=tkinter.x)
+             fill=tkinter.X)
 FileSourceListbox = tkinter.Listbox(FileFrame4,
                                     height=6,
                                     yscrollcommand=yScroll.set,
@@ -1355,13 +1363,13 @@ xScroll.config(command=FileSourceListbox.xview)
 
 OperationFrame = tkinter.Frame(Main,
                                relief=tkinter.SUNKEN, bd=1)
-OperationFrame.pack(side=tkinter.tkinter.TOP,
+OperationFrame.pack(side=tkinter.TOP,
                     fill=tkinter.X,
                     expand=tkinter.YES)
 ToolTip(OperationFrame, 'Click a button to perform action')
 tkinter.Label(OperationFrame,
               text='Operations',
-              font=("Helvetica", 15)).pack(side=tkinter.tkinter.TOP,
+              font=("Helvetica", 15)).pack(side=tkinter.TOP,
                                            fill=tkinter.BOTH,
                                            expand=tkinter.YES)
 
@@ -1397,19 +1405,19 @@ tkinter.Button(OperationFrame,
 DestinationFrame = tkinter.Frame(Main,
                                  relief=tkinter.SUNKEN,
                                  bd=1)
-DestinationFrame.pack(fill=tkinter.x)
+DestinationFrame.pack(fill=tkinter.X)
 ToolTip(DestinationFrame, 'Chose/add a destination path')
 tkinter.Label(DestinationFrame,
               text='Destination directories',
-              font=("Helvetica", 15)).pack(side=tkinter.tkinter.TOP,
+              font=("Helvetica", 15)).pack(side=tkinter.TOP,
                                            fill=tkinter.BOTH,
                                            expand=tkinter.YES)
 
 DestinationFrame00 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN,
                                    bd=1)
-DestinationFrame00.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame00.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 ToggleAllButton = tkinter.Button(DestinationFrame00,
                                  width=15,
                                  text='Toggle all',
@@ -1430,8 +1438,8 @@ ToolTip(VerifyPathsButton, 'Verify all destination paths')
 
 DestinationFrame01 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame01.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame01.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame01,
                     text='Dest01',
                     variable=Vars.DestinationCheck01Var).pack(side=tkinter.LEFT)
@@ -1446,8 +1454,8 @@ DestinationEntry01.pack(side=tkinter.LEFT,
 DestinationFrame02 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN,
                                    bd=1)
-DestinationFrame02.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame02.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame02,
                     text='Dest02',
                     variable=Vars.DestinationCheck02Var).pack(side=tkinter.LEFT)
@@ -1462,8 +1470,8 @@ DestinationEntry02.pack(side=tkinter.LEFT,
 DestinationFrame03 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN,
                                    bd=1)
-DestinationFrame03.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame03.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame03,
                     text='Dest03',
                     variable=Vars.DestinationCheck03Var).pack(side=tkinter.LEFT)
@@ -1477,8 +1485,8 @@ DestinationEntry03.pack(side=tkinter.LEFT,
 
 DestinationFrame04 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame04.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame04.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame04,
                     text='Dest04',
                     variable=Vars.DestinationCheck04Var).pack(side=tkinter.LEFT)
@@ -1492,8 +1500,8 @@ DestinationEntry04.pack(side=tkinter.LEFT,
 
 DestinationFrame05 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame05.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame05.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame05,
                     text='Dest05',
                     variable=Vars.DestinationCheck05Var).pack(side=tkinter.LEFT)
@@ -1508,8 +1516,8 @@ DestinationEntry05.pack(side=tkinter.LEFT,
 DestinationFrame06 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN,
                                    bd=1)
-DestinationFrame06.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame06.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame06,
                     text='Dest06',
                     variable=Vars.DestinationCheck06Var).pack(side=tkinter.LEFT)
@@ -1523,8 +1531,8 @@ DestinationEntry06.pack(side=tkinter.LEFT,
 
 DestinationFrame07 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame07.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame07.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame07,
                     text='Dest07',
                     variable=Vars.DestinationCheck07Var).pack(side=tkinter.LEFT)
@@ -1537,14 +1545,14 @@ DestinationEntry07.pack(side=tkinter.LEFT,
                         expand=tkinter.TRUE)
 
 DestinationFrame08 = tkinter.Frame(DestinationFrame, relief=tkinter.SUNKEN, bd=1)
-DestinationFrame08.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame08.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame08,
                     text='Dest08',
                     variable=Vars.DestinationCheck08Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame08,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('08')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame08,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('08')).pack(side=tkinter.LEFT)
 DestinationEntry08 = tkinter.Entry(DestinationFrame08)
 DestinationEntry08.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
@@ -1552,27 +1560,27 @@ DestinationEntry08.pack(side=tkinter.LEFT,
 
 DestinationFrame09 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame09.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame09.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame09,
                     text='Dest09',
                     variable=Vars.DestinationCheck09Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame09,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('09')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame09,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('09')).pack(side=tkinter.LEFT)
 DestinationEntry09 = tkinter.Entry(DestinationFrame09)
 DestinationEntry09.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
                         expand=tkinter.TRUE)
 
 DestinationFrame10 = tkinter.Frame(DestinationFrame, relief=tkinter.SUNKEN, bd=1)
-DestinationFrame10.pack(side=tkinter.tkinter.TOP, fill=tkinter.x)
+DestinationFrame10.pack(side=tkinter.TOP, fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame10,
                     text='Dest10',
                     variable=Vars.DestinationCheck10Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame10,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('10')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame10,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('10')).pack(side=tkinter.LEFT)
 DestinationEntry10 = tkinter.Entry(DestinationFrame10)
 DestinationEntry10.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
@@ -1580,14 +1588,14 @@ DestinationEntry10.pack(side=tkinter.LEFT,
 
 DestinationFrame11 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame11.pack(side=tkinter.tkinter.TOP,
+DestinationFrame11.pack(side=tkinter.TOP,
                         fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame11,
                     text='Dest11',
                     variable=Vars.DestinationCheck11Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame11,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('11')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame11,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('11')).pack(side=tkinter.LEFT)
 DestinationEntry11 = tkinter.Entry(DestinationFrame11)
 DestinationEntry11.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
@@ -1595,14 +1603,14 @@ DestinationEntry11.pack(side=tkinter.LEFT,
 
 DestinationFrame12 = tkinter.Frame(DestinationFrame,
                                    relief=tkinter.SUNKEN, bd=1)
-DestinationFrame12.pack(side=tkinter.tkinter.TOP,
-                        fill=tkinter.x)
+DestinationFrame12.pack(side=tkinter.TOP,
+                        fill=tkinter.X)
 tkinter.Checkbutton(DestinationFrame12,
                     text='Dest12',
                     variable=Vars.DestinationCheck12Var).pack(side=tkinter.LEFT)
-tkinter.tkinter.Button(DestinationFrame12,
-                       text='Browse',
-                       command=lambda: BrowseDestinationFile('12')).pack(side=tkinter.LEFT)
+tkinter.Button(DestinationFrame12,
+               text='Browse',
+               command=lambda: BrowseDestinationFile('12')).pack(side=tkinter.LEFT)
 DestinationEntry12 = tkinter.Entry(DestinationFrame12)
 DestinationEntry12.pack(side=tkinter.LEFT,
                         fill=tkinter.X,
@@ -1610,23 +1618,20 @@ DestinationEntry12.pack(side=tkinter.LEFT,
 
 # ------------------------------
 StatusFrame = tkinter.Frame(Main, relief=tkinter.SUNKEN, bd=1)
-StatusFrame.pack(fill=tkinter.x)
+StatusFrame.pack(fill=tkinter.X)
 tkinter.Label(StatusFrame, text='Status', font=("Helvetica", 15)).pack(
-    side=tkinter.tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
+    side=tkinter.TOP, fill=tkinter.BOTH, expand=tkinter.YES)
 Statuslabel = tkinter.Label(StatusFrame, textvariable=Vars.StatusVar, relief=tkinter.GROOVE)
-Statuslabel.pack(side=tkinter.tkinter.TOP, expand=tkinter.TRUE, fill=tkinter.x)
+Statuslabel.pack(side=tkinter.TOP, expand=tkinter.TRUE, fill=tkinter.X)
 ToolTip(Statuslabel, 'Display status')
 ProjectEntry = tkinter.Entry(StatusFrame)
-ProjectEntry.pack(side=tkinter.tkinter.TOP, expand=tkinter.TRUE, fill=tkinter.x)
+ProjectEntry.pack(side=tkinter.TOP, expand=tkinter.TRUE, fill=tkinter.X)
 ToolTip(ProjectEntry, 'Currently loaded project')
 # ------------------------------
 
 SetDefaults()  # Initialize the variables
 StartUpStuff()
 ParseCommandLine()
-# ------------------------------
-Vars.LogFileNameVar.set(os.path.join(
-    Vars.StartUpDirectoryVar.get(), 'PyCopyMoveTk.log'))
 # ------------------------------
 Main.bind('<F1>', lambda e: Help())
 Main.bind('<F2>', lambda e: About())
@@ -1637,6 +1642,6 @@ Main.bind('<F4>', lambda e: ProjectLoad())
 Main.minsize(400, 300)
 Main.resizable(True, False)
 Main.option_add('*Font', 'courier 10')
-Main.title('PyCopyMoveTk')
-Main.wm_iconname('PyCopyMoveTk')
+Main.title('DougPyCopyMove')
+Main.wm_iconname('DougPyCopyMove')
 Main.mainloop()

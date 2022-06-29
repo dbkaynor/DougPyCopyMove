@@ -8,14 +8,14 @@ packages = []
 
 
 setup(
-    name="PyCopyMoveTk",
+    name="DougPyCopyMove",
     version="0.1",
-    description="PyCopyMoveTk.py cx_Freeze script",
+    description="DougPyCopyMove.py cx_Freeze script",
     author="Douglas Kaynor",
     options={'build_exe': {'includes': includes,
                            'excludes': excludes,
                            'packages': packages,
                            'include_files': includefiles}},
-    executables=[Executable("PyCopyMoveTk.py",
+    executables=[Executable("DougPyCopyMove.py",
                             copyDependentFiles=True,
                             appendScriptToExe=True)])
